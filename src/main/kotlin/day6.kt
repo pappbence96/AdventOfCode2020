@@ -1,24 +1,22 @@
 import java.io.File
 
 fun main() {
-    var numOfDistinct = 0
-    var numOfAll = 0
+    var atLeastOneVoted = 0
+    var everyoneVoted = 0
 
     File({}.javaClass.getResource("day6.txt").toURI())
         .readText()
         .split("\r\n\r\n")
-        .map { it.split("\r\n") }
+        .map { it.split("\r\n").map { line -> line.toSet() } }
         .forEach { group ->
-            val all = group
-                .map { it.toSet() }
+            atLeastOneVoted += group
                 .reduce{ acc, it -> acc.union(it) }
-            val dist = group
-                .map { it.toSet() }
+                .count()
+            everyoneVoted += group
                 .reduce{ acc, it -> acc.intersect(it) }
-            numOfAll += all.count()
-            numOfDistinct += dist.count()
+                .count()
         }
 
-    println("The number of questions to which anyone answered \"yes\" is $numOfAll.")
-    println("The number of questions to which everyone answered \"yes\" is $numOfDistinct.")
+    println("The number of questions to which anyone answered \"yes\" is $atLeastOneVoted.")
+    println("The number of questions to which everyone answered \"yes\" is $everyoneVoted.")
 }
