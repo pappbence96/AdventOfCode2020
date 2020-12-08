@@ -1,17 +1,18 @@
 import java.io.File
 
+data class Quadruple<T1, T2, T3, T4>(val t1: T1, val t2: T2, val t3: T3, val t4: T4)
+
 fun main() {
-    var correctPasswords1 = 0
-    var correctPasswords2 = 0
-    File({}.javaClass.getResource("day2.txt").toURI())
-        .forEachLine {line ->
-            val match = Regex("(\\d+)-(\\d+) ([a-z]): (\\w+)").find(line)!!
-            val (lowerBounds, upperBounds, char, pw) = match.destructured
-            if (pw.count { char[0] == it } in lowerBounds.toInt() .. upperBounds.toInt())
-                correctPasswords1++
-            if ((pw[lowerBounds.toInt() - 1] == char[0]) xor (pw[upperBounds.toInt() - 1] == char[0]))
-                correctPasswords2++
+    val input = File({}.javaClass.getResource("day2.txt").toURI())
+        .readLines()
+        .map {
+            val (l, u, c, pw) = Regex("(\\d+)-(\\d+) ([a-z]): (\\w+)").find(it)!!.destructured
+            Quadruple(l.toInt(), u.toInt(), c.first(), pw)
         }
-    println("1. The number of correct passwords is $correctPasswords1")
-    println("2. The number of correct passwords is $correctPasswords2")
+
+    val t1 = input.count { (min, max, char, pw) -> pw.count { char == it } in min .. max }
+    println("1. The number of correct passwords is $t1")
+
+    val t2 = input.count { (first, second, char, pw) -> (pw[first - 1] == char) xor (pw[second - 1] == char) }
+    println("2. The number of correct passwords is $t2")
 }
