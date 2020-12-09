@@ -7,7 +7,7 @@ fun main() {
         .readLines()
         .map { it.toLong() }
 
-    val preambleLength = 5
+    val preambleLength = 25
     val weakness = input
         .windowed(preambleLength + 1)
         .map { Pair(it.take(preambleLength), it.last()) }
