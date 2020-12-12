@@ -63,7 +63,6 @@ class Room(private var seats: List<List<Seat>>) {
                 .readLines()
                 .map { row -> row.map { if (it == '.') Seat.FLOOR else if (it == '#') Seat.OCCUPIED else Seat.FREE }.toMutableList() }
                 .let { Room(it) }
-        }
     }
 }
 
