@@ -2,27 +2,23 @@ import java.io.File
 import kotlin.system.measureTimeMillis
 
 fun determineLastSpokenValue(input: List<String>, rounds:  Int): Int {
-    val cache = input
-        .mapIndexed { i, n -> n.toInt() to mutableListOf(i + 1) }
-        .toMap().toMutableMap()
+    val cache = arrayOfNulls<Int>(rounds * 2)
+    input.map { it.toInt() }.forEachIndexed { i, n ->
+        cache[2 * n + 1] = cache[2 * n]
+        cache[2 * n] = i + 1
+    }
 
     var lastSpoken = input.last().toInt()
     for(round in input.size + 1 .. rounds) {
-        var occurrences = cache[lastSpoken]
-        lastSpoken = if (occurrences == null || occurrences.size < 2) {
+        lastSpoken = if (cache[lastSpoken * 2] == null || cache[lastSpoken * 2 + 1] == null) {
             0
         } else {
-            occurrences[1] - occurrences[0]
+            cache[lastSpoken * 2]!! - cache[lastSpoken * 2 + 1]!!
         }
 
-        occurrences = cache[lastSpoken]
-        if (occurrences != null) {
-            cache[lastSpoken] = mutableListOf(occurrences.last(), round)
-        } else {
-            cache[lastSpoken] = mutableListOf(round)
-        }
+        cache[lastSpoken * 2 + 1] = cache[lastSpoken * 2]
+        cache[lastSpoken * 2] = round
     }
-    println("Cache max value: ${cache.keys.maxOrNull()}")
     return lastSpoken
 }
 
