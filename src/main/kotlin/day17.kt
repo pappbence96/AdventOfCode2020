@@ -1,37 +1,48 @@
 import java.io.File
-import java.lang.Math.pow
-import kotlin.math.pow
 
-data class Quad<T1, T2, T3, T4>(val t1: T1, val t2: T2, val t3: T3, val t4: T4)
+class HyperSpace(var size: Int, private val dimension: Int) {
+    val active: Int get() = content.size
+    private val content = HashSet<List<Int>>()
 
-class Space(val width: Int) {
-    val cubes: Int get() = content.count { it == '#' }
-    var content: Array<Char> = Array(width * width * width * width) { '.' }
-
-    fun read(x: Int, y: Int, z: Int, w: Int): Char = content.getOrNull(w * width * width * width + z * width * width + y * width + x) ?: '.'
-
-    fun write(x: Int, y: Int, z: Int, w: Int, c: Char) {
-        content[w * width * width * width + z * width * width + y * width + x] = c
+    fun activate(coords: List<Int>) {
+        content.add(coords)
     }
 
+    private fun isActive(coords: List<Int>) = content.contains(coords)
+
     fun ping() {
-        val contentCopy = content.copyOf()
-        for(x in 0 until width) {
-            for(y in 0 until width) {
-                for(z in 0 until width) {
-                    for(w in 0 until width) {
-                        val r = -1..1
-                        val coords = r.flatMap { cx -> r.flatMap { cy -> r.flatMap { cz -> r.map { cw -> Quad(cx, cy, cz, cw) } } } }
-                            .filter { (x, y, z, w) -> !(x == 0 && y == 0 && z == 0 && w == 0) }
-                        val count = coords.map { (ox, oy, oz, ow) -> if(read(x + ox, y + oy, z + oz, w + ow) == '#') 1 else 0 }.sum()
-                        val current = read(x, y, z, w)
-                        if(current == '#' && count !in 2..3) contentCopy[w * width * width * width + z * width * width + y * width + x] = '.'
-                        else if(current == '.' && count == 3) contentCopy[w * width * width * width + z * width * width + y * width + x] = '#'
-                    }
+        size += 2
+
+        val toAdd = mutableListOf<List<Int>>()
+        val toRemove = mutableListOf<List<Int>>()
+
+        val coordsToInspect = generateCoordinates((size - 1) / -2, (size - 1) / 2, dimension)
+        coordsToInspect.forEach { currentCoord ->
+            val offsets = generateCoordinates(-1, 1, dimension).filter { !it.all { c -> c == 0 } }
+            val activeNeighbors = offsets.count { offset ->
+                val neighbor = currentCoord.zip(offset).map { it.first + it.second }
+                isActive(neighbor)
+            }
+            if(isActive(currentCoord) && activeNeighbors !in 2..3) {
+                toRemove.add(currentCoord)
+            } else if(!isActive(currentCoord) && activeNeighbors == 3) {
+                toAdd.add(currentCoord)
+            }
+        }
+        content.removeAll(toRemove)
+        content.addAll(toAdd)
+    }
+
+    private fun generateCoordinates(start: Int, end: Int, dimension: Int): List<List<Int>> {
+        return if(dimension == 1) {
+            (start .. end).map { listOf(it) }
+        } else {
+            (start .. end).toList().flatMap {
+                c -> generateCoordinates(start, end, dimension - 1).map {
+                    it.toMutableList().also { it.add(c) }
                 }
             }
         }
-        content = contentCopy
     }
 }
 
@@ -39,21 +50,25 @@ fun main() {
     val input = File({}.javaClass.getResource("day17.txt").toURI())
         .readLines()
     val rounds = 6
-    val maxWidth = input.size + rounds * 2
 
-    val space = Space(maxWidth)
-    val offset = (space.width - input.size) / 2
+
+    val s1 = HyperSpace(input.size, 3)
+    val s2 = HyperSpace(input.size, 4)
     input.forEachIndexed { x, line ->
         line.forEachIndexed { y, c ->
-            println("Writing $c at (${x + (maxWidth - 1) / 2}, ${y + (maxWidth - 1) / 2}, z)")
-            space.write(x - (input.size - 1) / 2 + (maxWidth - 1) / 2, y - (input.size - 1) / 2 + (maxWidth - 1) / 2, (maxWidth - 1) / 2, (maxWidth - 1) / 2, c)
+            val rx = x - (input.size - 1) / 2
+            val ry = y - (input.size - 1) / 2
+            if(c == '#') { s1.activate(listOf(rx, ry, 0)) }
+            if(c == '#') { s2.activate(listOf(rx, ry, 0, 0)) }
         }
     }
-    space.ping()
-    space.ping()
-    space.ping()
-    space.ping()
-    space.ping()
-    space.ping()
-    println(space.cubes)
+
+    repeat(rounds) {
+        s1.ping()
+        s2.ping()
+        println("${s1.active}\t${s2.active}")
+    }
+
+    println("1. Number of active cubes in the 3D space: ${s1.active}")
+    println("2. Number of active cubes in the 4D space: ${s2.active}")
 }
