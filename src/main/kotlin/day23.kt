@@ -1,8 +1,6 @@
 import java.io.File
 import kotlin.system.measureTimeMillis
 
-enum class Output { FIRST, SECOND }
-
 class Node(var value: Int) {
     lateinit var next: Node
     fun insertAfter(nodes: List<Node>) {
@@ -35,7 +33,7 @@ fun mapOfNodesOf(values: List<Int>): MutableMap<Int, Node> {
     return map
 }
 
-fun play(cups: List<Int>, maxValue: Int, rounds: Int, output: Output) {
+fun play(cups: List<Int>, maxValue: Int, rounds: Int): Node {
     val allCups = cups.toMutableList()
     allCups.addAll((10 .. maxValue).toList())
     val map = mapOfNodesOf(allCups)
@@ -50,18 +48,7 @@ fun play(cups: List<Int>, maxValue: Int, rounds: Int, output: Output) {
         selected = selected.next
     }
 
-    var cup = map[1]!!.next
-    when (output) {
-        Output.FIRST -> {
-            print("1. Labels on the cups after cup 1: ")
-            while(cup.value != 1) {
-                print(cup.value)
-                cup = cup.next
-            }
-            println()
-        }
-        Output.SECOND -> println("2. Product of the two cups clockwise after 1: ${cup.value.toLong() * cup.next.value.toLong()}")
-    }
+    return map[1]!!
 }
 
 fun main() {
@@ -69,6 +56,15 @@ fun main() {
         .readText()
         .map { it.toString().toInt() }
 
-    play(cups, 9, 100, Output.FIRST)
-    play(cups, 1000000, 10000000, Output.SECOND)
+    print("1. Labels on the cups after cup 1: ")
+    var cup = play(cups, 9, 100).next
+    while(cup.value != 1){
+        print(cup.value)
+        cup = cup.next
+    }
+    println()
+
+    play(cups, 1000000, 10000000).next.let {
+        println("2. Product of the two cups clockwise after 1: ${it.value.toLong() * it.next.value.toLong()}")
+    }
 }
